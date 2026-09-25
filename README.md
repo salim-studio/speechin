@@ -1,26 +1,29 @@
-# speechin 🎙️ — مثل Typeless، يعمل فوراً بدون API
+# speechin 🎙️ — Speak. Done.
 
-تطبيق ويب للإملاء الصوتي الذكي: تحدث طبيعياً → نص منقح جاهز.
+Smart voice dictation by **salim-slimani**: talk naturally → polished, ready-to-send text. No sign-up, no API keys.
 
-## التشغيل
-1. افتح `index.html` — الأفضل عبر سيرفر محلي (الميكروفون يحتاج localhost/https):
+## Run it
+1. Serve the folder (the microphone needs localhost or https):
 ```
 cd speechin
 python3 -m http.server 8000
-# افتح http://localhost:8000 في Chrome أو Edge
+# open http://localhost:8000 in Chrome or Edge
 ```
-2. اختر لغة الكلام، اضغط 🎙️، اسمح للميكروفون، تحدث.
-3. جرّب زر **شاهد التنقيح التجريبي** بدون ميكروفون.
+2. Pick your speaking language, hit 🎙️, allow the microphone, talk.
+3. No mic handy? Click **"See a live cleanup demo"**.
 
-## المميزات (كلها محلية، بدون مفاتيح)
-- 📝 إملاء ذكي: إزالة الحشو (يعني، امم، um, uh)، إزالة التكرار، فهم القصد الأخير (لا أقصد...)
-- 📋 تنسيق تلقائي: نقاط وقوائم مرقمة
-- 🎭 نبرات: رسمي / ودود / مختصر / مفصل / إيميل / نقاط
-- 🌍 ترجمة فورية (MyMemory المجانية، بدون مفتاح — تحتاج إنترنت)
-- ✨ تحرير بالأوامر: أقصر / أطول / رسمي / ودود / نقاط / لخص + أمر مخصص
-- 📖 قاموس شخصي + 🕘 سجل — محفوظان في localStorage (خصوصية 100%)
-- 📊 إحصائيات: كلمات / wpm / وقت موفّر + نسخ / حفظ / تحميل txt
+## Features (all local, no keys)
+- 📝 Smart dictation: filler removal (um, uh, you know), repeat merging, final-intent detection ("actually I mean...")
+- 📋 Auto formatting: bullets, numbered steps, email layout
+- 🎭 Tones: formal / friendly / concise / detailed / email / bullets
+- 🌍 Instant translation (free MyMemory, no key — needs internet)
+- ✨ Command edit: shorter / longer / formal / friendly / bullets / summarize + custom commands
+- 📖 Personal dictionary + 🕘 history — stored in localStorage (100% private)
+- 📊 Stats: words / wpm / time saved + copy / save / .txt download
 
-## ملاحظات
-- التعرف الصوتي عبر Web Speech API (يعمل بأفضل شكل على Chrome/Edge، ويحتاج إنترنت).
-- التنقيح يتم محلياً بالكامل في `app.js` → دالة `polish()`.
+## Notes
+- Speech recognition uses the Web Speech API (best on Chrome/Edge, needs internet).
+- Cleanup runs fully locally in `app.js` → `polish()`.
+
+---
+© 2026 salim-slimani. All rights reserved.
