@@ -1,38 +1,47 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>speechin — تحدث، وسيكتب عنك بذكاء</title>
-<meta name="description" content="speechin — تطبيق إملاء صوتي ذكي مثل Typeless: تحدث طبيعي ويحول كلامك لنص منقح جاهز للإرسال. بدون حساب، بدون API." />
+<title>speechin — Speak. Done. Smart voice dictation</title>
+<meta name="description" content="speechin by salim-slimani — smart voice dictation that turns natural speech into polished, ready-to-send text. No sign-up, no API keys, 100% private." />
+<meta name="author" content="salim-slimani" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23060913'/%3E%3Cg stroke='%236EE7FF' stroke-width='2.6' stroke-linecap='round'%3E%3Cline x1='8' y1='13' x2='8' y2='19'/%3E%3Cline x1='13' y1='9' x2='13' y2='23'/%3E%3Cline x1='18' y1='12' x2='18' y2='20'/%3E%3Cline x1='23' y1='7' x2='23' y2='25'/%3E%3C/g%3E%3Ccircle cx='23' cy='7' r='2.4' fill='%23D4FF4F'/%3E%3C/svg%3E" />
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+<div class="orb orb-a"></div><div class="orb orb-b"></div>
+
 <header class="nav">
   <div class="nav-inner">
-    <div class="logo"><span class="logo-dot"></span> speechin <small>بيتا</small></div>
+    <a class="brand" href="#top" aria-label="speechin home">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0B1226"/><g stroke="#6EE7FF" stroke-width="2.6" stroke-linecap="round"><line x1="8" y1="13" x2="8" y2="19"/><line x1="13" y1="9" x2="13" y2="23"/><line x1="18" y1="12" x2="18" y2="20"/><line x1="23" y1="9" x2="23" y2="23"/></g><circle cx="23" cy="7.5" r="2.4" fill="#D4FF4F"/></svg>
+      <span>speechin</span><small>v1.0</small>
+    </a>
     <nav class="links">
-      <a href="#app">التطبيق</a>
-      <a href="#features">المميزات</a>
-      <a href="#dict">القاموس</a>
-      <a href="#history-sec">السجل</a>
+      <a href="#app">Studio</a>
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#dict">Dictionary</a>
+      <a href="#history-sec">History</a>
     </nav>
-    <a class="btn small" href="#app">جرّب مجاناً</a>
+    <a class="btn small" href="#app">Try free</a>
   </div>
 </header>
 
-<section class="hero">
+<section class="hero" id="top">
   <div class="hero-inner">
-    <div class="pill">🎙️ إملاء صوتي ذكي — يعمل فوراً بدون مفاتيح</div>
-    <h1>ما تكتبش.<br><span class="grad">اتكلم، و speechin يكتب عنك.</span></h1>
-    <p class="sub">تحدث طبيعياً، وسيحول كلامك لرسائل وإيميلات ومستندات منقحة كأنك كتبتها بعناية — في الوقت الحقيقي. أسرع 4 مرات من الكتابة.</p>
+    <div class="pill"><span class="pulse"></span> Smart voice dictation — no sign-up, no API keys</div>
+    <h1>Don't type.<br /><span class="grad">Just speak. speechin writes.</span></h1>
+    <p class="sub">Talk naturally and watch your words become polished messages, emails and documents — in real time. Four times faster than typing, private by design.</p>
     <div class="cta-row">
-      <a href="#app" class="btn big" id="cta-start">ابدأ التحدث الآن ↓</a>
-      <button class="btn ghost big" id="cta-demo">شاهد التنقيح التجريبي</button>
+      <a href="#app" class="btn big" id="cta-start">Start speaking ↓</a>
+      <button class="btn ghost big" id="cta-demo">See a live cleanup demo</button>
     </div>
+    <div class="wave" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="speed">
-      <div class="speed-card"><span>⌨️ لوحة QWERTY</span><b>45 <small>كلمة/دقيقة</small></b></div>
-      <div class="speed-card hot"><span>🎙️ speechin</span><b>220 <small>كلمة/دقيقة</small></b><em>وفّر يوماً أسبوعياً</em></div>
+      <div class="speed-card"><span>⌨️ QWERTY keyboard</span><b>45 <small>wpm</small></b></div>
+      <div class="speed-card hot"><span>🎙️ speechin voice</span><b>220 <small>wpm</small></b><em>Save a day every week</em></div>
     </div>
     <p class="hint" id="support-hint"></p>
   </div>
@@ -41,130 +50,142 @@
 <main id="app" class="app-wrap">
   <div class="app-card">
     <div class="app-head">
-      <h2>🎤 استوديو speechin</h2>
-      <div class="status" id="status"><span class="rec-dot"></span><span id="status-text">جاهز — اضغط الميكروفون وابدأ الكلام</span></div>
+      <h2><span class="mark-sm"></span> speechin Studio</h2>
+      <div class="status" id="status"><span class="rec-dot"></span><span id="status-text">Ready — hit the mic and start talking</span></div>
     </div>
 
     <div class="tabs">
-      <button class="tab active" data-mode="dictate">📝 إملاء ذكي</button>
-      <button class="tab" data-mode="translate">🌍 ترجمة فورية</button>
-      <button class="tab" data-mode="edit">✨ تحرير بالأوامر</button>
+      <button class="tab active" data-mode="dictate">📝 Dictate</button>
+      <button class="tab" data-mode="translate">🌍 Translate</button>
+      <button class="tab" data-mode="edit">✨ Command edit</button>
     </div>
 
     <div class="controls">
-      <label>لغة الكلام
+      <label>Speaking language
         <select id="in-lang">
-          <option value="ar-EG">العربية (مصر) ar-EG</option>
-          <option value="ar-SA">العربية (فصحى) ar-SA</option>
-          <option value="en-US" selected>English (US) en-US</option>
-          <option value="en-GB">English (UK) en-GB</option>
-          <option value="fr-FR">Français fr-FR</option>
-          <option value="de-DE">Deutsch de-DE</option>
-          <option value="es-ES">Español es-ES</option>
-          <option value="tr-TR">Türkçe tr-TR</option>
-          <option value="ur-PK">اردو ur-PK</option>
-          <option value="hi-IN">हिन्दी hi-IN</option>
+          <option value="en-US" selected>English (US)</option>
+          <option value="en-GB">English (UK)</option>
+          <option value="ar-SA">Arabic (MSA)</option>
+          <option value="ar-EG">Arabic (Egypt)</option>
+          <option value="fr-FR">Français</option>
+          <option value="de-DE">Deutsch</option>
+          <option value="es-ES">Español</option>
+          <option value="tr-TR">Türkçe</option>
+          <option value="ur-PK">Urdu</option>
+          <option value="hi-IN">Hindi</option>
         </select>
       </label>
-      <label id="target-wrap" class="hidden">الترجمة إلى
+      <label id="target-wrap" class="hidden">Translate to
         <select id="out-lang">
-          <option value="ar">العربية</option>
           <option value="en" selected>English</option>
-          <option value="fr">Français</option>
-          <option value="de">Deutsch</option>
-          <option value="es">Español</option>
-          <option value="tr">Türkçe</option>
-          <option value="ur">اردو</option>
+          <option value="ar">Arabic</option>
+          <option value="fr">French</option>
+          <option value="de">German</option>
+          <option value="es">Spanish</option>
+          <option value="tr">Turkish</option>
+          <option value="ur">Urdu</option>
         </select>
       </label>
-      <label>النبرة
+      <label>Tone
         <select id="tone">
-          <option value="auto" selected>تلقائي حسب السياق</option>
-          <option value="formal">رسمي — إيميلات وشغل</option>
-          <option value="friendly">ودود — شات وأصدقاء</option>
-          <option value="concise">مختصر</option>
-          <option value="detailed">مفصّل</option>
-          <option value="email">📧 صيغة إيميل</option>
-          <option value="bullets">• نقاط منظمة</option>
+          <option value="auto" selected>Auto — match context</option>
+          <option value="formal">Formal — work &amp; email</option>
+          <option value="friendly">Friendly — chat</option>
+          <option value="concise">Concise</option>
+          <option value="detailed">Detailed</option>
+          <option value="email">📧 Email format</option>
+          <option value="bullets">• Bullet list</option>
         </select>
       </label>
-      <label class="check"><input type="checkbox" id="auto-polish" checked /> تنقيح تلقائي (إزالة الحشو والتكرار)</label>
+      <label class="check"><input type="checkbox" id="auto-polish" checked /> Auto-clean (fillers &amp; repeats)</label>
     </div>
 
     <div class="mic-row">
-      <button id="mic" class="mic" title="اضغط للتسجيل / الإيقاف"><span id="mic-icon">🎙️</span></button>
+      <button id="mic" class="mic" title="Record / stop"><span id="mic-icon">🎙️</span></button>
       <div class="mic-meta">
         <div id="timer">00:00</div>
-        <div class="stats"><span id="st-words">0 كلمة</span> • <span id="st-wpm">0 wpm</span> • <span id="st-saved">وفّرت 0 د</span></div>
+        <div class="stats"><span id="st-words">0 words</span> • <span id="st-wpm">0 wpm</span> • <span id="st-saved">saved 0 min</span></div>
       </div>
       <div class="mic-actions">
-        <button class="btn ghost" id="btn-copy">📋 نسخ</button>
-        <button class="btn ghost" id="btn-save">💾 حفظ</button>
-        <button class="btn ghost" id="btn-txt">⬇ txt</button>
-        <button class="btn ghost danger" id="btn-clear">🗑 مسح</button>
+        <button class="btn ghost" id="btn-copy">📋 Copy</button>
+        <button class="btn ghost" id="btn-save">💾 Save</button>
+        <button class="btn ghost" id="btn-txt">⬇ .txt</button>
+        <button class="btn ghost danger" id="btn-clear">🗑 Clear</button>
       </div>
     </div>
 
     <div class="panes">
       <div class="pane">
-        <h3>👂 ما سمعناه (خام)</h3>
-        <div id="raw" class="box raw" placeholder="هنا يظهر الكلام الخام لحظة بلحظة..."></div>
+        <h3>👂 Raw transcript</h3>
+        <div id="raw" class="box raw" placeholder="Live raw speech appears here..."></div>
       </div>
       <div class="pane">
-        <h3>✨ النص المنقح الجاهز <button class="mini" id="btn-repolish">إعادة تنقيح ↻</button></h3>
-        <div id="clean" class="box clean" contenteditable="true" placeholder="هنا يظهر النص بعد إزالة الحشو والتنسيق..."></div>
+        <h3>✨ Polished &amp; ready <button class="mini" id="btn-repolish">Re-polish ↻</button></h3>
+        <div id="clean" class="box clean" contenteditable="true" placeholder="Cleaned, formatted text appears here..."></div>
       </div>
     </div>
 
     <div id="edit-bar" class="edit-bar hidden">
-      <span>حدد النص بالأعلى ثم اختر أمراً — أو اكتبه صوتياً:</span>
+      <span>Pick a command for the text above — or type your own:</span>
       <div class="cmds">
-        <button data-cmd="shorter">اجعله أقصر</button>
-        <button data-cmd="longer">اجعله أطول</button>
-        <button data-cmd="formal">نبرة رسمية</button>
-        <button data-cmd="friendly">نبرة ودودة</button>
-        <button data-cmd="bullets">حوّله لنقاط</button>
-        <button data-cmd="summary">لخّصه</button>
-        <button data-cmd="translate">ترجمه الآن</button>
+        <button data-cmd="shorter">Make shorter</button>
+        <button data-cmd="longer">Make longer</button>
+        <button data-cmd="formal">Formal tone</button>
+        <button data-cmd="friendly">Friendly tone</button>
+        <button data-cmd="bullets">To bullets</button>
+        <button data-cmd="summary">Summarize</button>
+        <button data-cmd="translate">Translate now</button>
       </div>
       <div class="cmd-input">
-        <input id="custom-cmd" placeholder='أمر مخصص: مثال "اجعله إيميل اعتذار قصير"...' />
-        <button id="btn-custom-cmd" class="btn small">نفّذ ✨</button>
+        <input id="custom-cmd" placeholder='Custom command, e.g. "turn this into a short apology email"...' />
+        <button id="btn-custom-cmd" class="btn small">Apply ✨</button>
       </div>
     </div>
-    <p class="note">💡 يعمل بأفضل شكل على <b>Chrome / Edge</b> مع ميكروفون. اضغط السماح للميكروفون عند الطلب. يعمل على <b>localhost أو https</b>. الكلام يُحوّل لنص عبر محرك التعرف في المتصفح، والتنقيح يتم <b>محلياً 100%</b> بدون إرسال بياناتك لأي سيرفر (عدا الترجمة الاختيارية عبر MyMemory المجانية).</p>
+    <p class="note">💡 Best on <b>Chrome / Edge</b> with a microphone, over <b>localhost or https</b>. Speech is transcribed by your browser's engine; cleanup runs <b>100% locally</b> — nothing you dictate is sent to our servers (except optional translation via the free MyMemory service).</p>
   </div>
+
+  <section id="how" class="steps">
+    <div class="step"><b>1</b><h3>Press &amp; speak</h3><p>Hit the mic and talk naturally — fillers, repeats and self-corrections included.</p></div>
+    <div class="step"><b>2</b><h3>speechin cleans it</h3><p>Fillers removed, repeats merged, lists formatted, tone matched.</p></div>
+    <div class="step"><b>3</b><h3>Ship it</h3><p>Copy, download, translate or command-edit — then paste anywhere.</p></div>
+  </section>
 
   <div class="grid2">
     <section id="dict" class="card">
-      <h2>📖 قاموسك الشخصي</h2>
-      <p>علّم speechin الأسماء والمصطلحات التي تهمك. تُحفظ على جهازك فقط.</p>
+      <h2>📖 Personal dictionary</h2>
+      <p>Teach speechin the names and terms you use. Stored on your device only.</p>
       <div class="dict-add">
-        <input id="dict-from" placeholder="الكلمة كما تُسمع: مثلا سبيتش ان" />
-        <input id="dict-to" placeholder="التصحيح: مثلا speechin" />
-        <button id="dict-add-btn" class="btn small">+ إضافة</button>
+        <input id="dict-from" placeholder="Heard as, e.g. spee chin" />
+        <input id="dict-to" placeholder="Correct form, e.g. speechin" />
+        <button id="dict-add-btn" class="btn small">+ Add</button>
       </div>
       <ul id="dict-list" class="dict-list"></ul>
     </section>
 
     <section id="history-sec" class="card">
-      <h2>🕘 السجل <button class="mini danger" id="hist-clear">مسح الكل</button></h2>
-      <p>كل إملاءاتك محفوظة محلياً على جهازك. اضغط أي عنصر لاسترجاعه.</p>
+      <h2>🕘 History <button class="mini danger" id="hist-clear">Clear all</button></h2>
+      <p>Every dictation is saved locally on your device. Click any item to restore it.</p>
       <ul id="hist-list" class="hist-list"></ul>
     </section>
   </div>
 
   <section id="features" class="feats">
-    <div class="feat"><b>🧹 يشيل الحشو</b><span>يحذف um, uh, يعني، امم تلقائياً</span></div>
-    <div class="feat"><b>🔁 يشيل التكرار</b><span>يكتشف التلعثم ويبقي الصياغة الأنظف</span></div>
-    <div class="feat"><b>🧠 يفهم قصدك</b><span>لو صححت نفسك mid-sentence يأخذ قصدك الأخير</span></div>
-    <div class="feat"><b>📋 تنسيق تلقائي</b><span>قوائم ونقاط وخطوات مرقمة جاهزة</span></div>
-    <div class="feat"><b>🎭 نبرة لكل سياق</b><span>رسمي للإيميل، ودود للشات</span></div>
-    <div class="feat"><b>🔒 خصوصية</b><span>صفر احتفاظ سحابي — كل شيء localStorage</span></div>
+    <div class="feat"><b>🧹 Filler removal</b><span>Drops um, uh, you know — automatically</span></div>
+    <div class="feat"><b>🔁 Repeat merging</b><span>Stutters detected, cleanest phrasing kept</span></div>
+    <div class="feat"><b>🧠 Intent aware</b><span>Correct yourself mid-sentence — only the final intent stays</span></div>
+    <div class="feat"><b>📋 Auto formatting</b><span>Bullets, numbered steps, email layout</span></div>
+    <div class="feat"><b>🎭 Tone per context</b><span>Formal for email, friendly for chat</span></div>
+    <div class="feat"><b>🔒 Private by design</b><span>Zero cloud retention — everything in localStorage</span></div>
   </section>
 </main>
 
-<footer>صُنع بـ ❤️ — <b>speechin</b> نسخة مفتوحة مستوحاة من Typeless • يعمل بالكامل في المتصفح</footer>
+<footer>
+  <div class="foot-brand">
+    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0B1226"/><g stroke="#6EE7FF" stroke-width="2.6" stroke-linecap="round"><line x1="8" y1="13" x2="8" y2="19"/><line x1="13" y1="9" x2="13" y2="23"/><line x1="18" y1="12" x2="18" y2="20"/><line x1="23" y1="9" x2="23" y2="23"/></g><circle cx="23" cy="7.5" r="2.4" fill="#D4FF4F"/></svg>
+    <b>speechin</b> — Speak. Done.
+  </div>
+  <p>© 2026 salim-slimani. All rights reserved. · Runs entirely in your browser.</p>
+</footer>
 <script src="app.js"></script>
 </body>
 </html>
