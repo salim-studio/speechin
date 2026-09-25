@@ -1,4 +1,6 @@
-# speechin 🎙️ — Speak. Done.
+# <img src="assets/logo.svg" width="32" height="32" alt="speechin logo" /> speechin — Speak. Done.
+
+![speechin cover](assets/cover.png)
 
 Smart voice dictation by **salim-slimani**: talk naturally → polished, ready-to-send text. No sign-up, no API keys.
 
