@@ -1,4 +1,4 @@
-/* speechin — محرك إملاء ذكي محلي 100% (مستوحى من Typeless) */
+/* speechin v1.0 — local smart-dictation engine / (c) 2026 salim-slimani */
 const $ = (id) => document.getElementById(id);
 const els = { mic: $("mic"), icon: $("mic-icon"), status: $("status"), statusText: $("status-text"), raw: $("raw"), clean: $("clean"), inLang: $("in-lang"), outLang: $("out-lang"), targetWrap: $("target-wrap"), tone: $("tone"), autoPolish: $("auto-polish"), timer: $("timer"), stWords: $("st-words"), stWpm: $("st-wpm"), stSaved: $("st-saved"), editBar: $("edit-bar"), hint: $("support-hint") };
 
@@ -11,15 +11,15 @@ document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () =>
   b.classList.add("active"); mode = b.dataset.mode;
   els.targetWrap.classList.toggle("hidden", mode !== "translate");
   els.editBar.classList.toggle("hidden", mode !== "edit");
-  setStatus(mode === "translate" ? "وضع الترجمة: تحدث وسيُترجم تلقائياً" : mode === "edit" ? "وضع التحرير: حدد نصاً واختر أمراً" : "جاهز — اضغط الميكروفون وابدأ الكلام");
+  setStatus(mode === "translate" ? "Translate mode: speak and it will be translated automatically" : mode === "edit" ? "Edit mode: pick a command for the text above" : "Ready — hit the mic and start talking");
 }));
 
 // ---------- Support check ----------
 (function () {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const secure = location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1" || location.protocol === "file:";
-  if (!SR) els.hint.textContent = "⚠️ متصفحك لا يدعم التعرف الصوتي — استخدم Chrome أو Edge. يمكنك الكتابة يدوياً في مربع النص ثم (إعادة تنقيح).";
-  else if (!secure && location.protocol !== "file:") els.hint.textContent = "⚠️ الميكروفون يحتاج https أو localhost ليعمل.";
+  if (!SR) els.hint.textContent = "⚠️ Your browser has no speech recognition — use Chrome or Edge. You can still type in the box and press Re-polish.";
+  else if (!secure && location.protocol !== "file:") els.hint.textContent = "⚠️ The microphone needs https or localhost to work.";
   else els.hint.textContent = "";
 })();
 
@@ -31,13 +31,13 @@ function tickStats() {
   const words = (els.clean.innerText.trim().match(/\S+/g) || []).length;
   const secs = Math.max(1, Math.round((Date.now() - startTime) / 1000));
   const wpm = Math.round(words / (secs / 60));
-  els.stWords.textContent = words + " كلمة";
+  els.stWords.textContent = words + " words";
   els.stWpm.textContent = (isFinite(wpm) ? wpm : 0) + " wpm";
-  els.stSaved.textContent = "وفّرت " + Math.max(0, Math.round(words / 45 - words / 220)) + " د";
+  els.stSaved.textContent = "saved " + Math.max(0, Math.round(words / 45 - words / 220)) + " min";
 }
 setInterval(() => { if (recognizing) { els.timer.textContent = fmt(Math.round((Date.now() - startTime) / 1000)); tickStats(); } }, 500);
 
-// ================= POLISH ENGINE (محلي) =================
+// ================= POLISH ENGINE (local, multilingual) =================
 const FILLER = /\b(um+|uh+|er+|ah+|you know|like basically|basically|actually ya3ni|i mean uh)\b|\b(يعني|اه+|امم+|مم+|اا+ه?|ها+|بصراحه|بصراحة|تمام\؟?|اوكيه?|حسنا يعني)\b/gi;
 const SELF_CORRECT = /(لا أقصد|لأ قصدي|قصدي|آسف أقصد|سوري أقصد|sorry i mean|i mean|actually i meant|i meant)/i;
 
@@ -60,14 +60,13 @@ function dedupe(text) {
 }
 function keepLastIntent(text) {
   const m = text.match(new RegExp(`^(.*)(${SELF_CORRECT.source})(.*)$`, "i"));
-  if (m) return m[3].trim() || text; // احتفظ بالقصد الأخير فقط
+  if (m) return m[3].trim() || text; // keep only the final intent
   return text;
 }
 function formatLists(text) {
   let t = " " + text + " ";
   const map = [["أولا", "1."], ["ثانيا", "2."], ["ثالثا", "3."], ["رابعا", "4."], ["خامسا", "5."], ["first,", "1."], ["second,", "2."], ["third,", "3."], ["next,", "•"], ["finally,", "•"], ["نقطة", "•"], ["نقطه", "•"]];
   for (const [a, b] of map) t = t.replace(new RegExp("\\b" + a.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "gi"), "\n" + b);
-  // جمل طويلة منفصلة بـ "وبعدين / ثم / بعد كده" → سطور
   t = t.replace(/\s+(ثم|وبعدين|بعد كده|كمان)\s+/g, "\n• ");
   return t.replace(/\n{3,}/g, "\n\n").trim();
 }
@@ -75,18 +74,17 @@ const TONE_MAP_FORMAL = [["عايز", "أرغب"], ["عاوز", "أرغب"], ["�
 function applyTone(text, tone) {
   const isAr = /[\u0600-\u06FF]/.test(text);
   if (tone === "formal") for (const [a, b] of TONE_MAP_FORMAL) text = text.replace(new RegExp("\\b" + a.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "gi"), b);
-  if (tone === "friendly" && isAr) text = text.replace(/^[.\s]*/, "").replace(/^/, "");
   if (tone === "concise") {
     const s = text.split(/(?<=[.!?؟۔])\s+/);
     if (s.length > 2) text = s.filter((_, i) => i % 2 === 0 || i === s.length - 1).join(" ");
-    text = text.replace(/\b(جدا جدا|very very|really really)\b/gi, "جداً");
+    text = text.replace(/\b(very very|really really|جدا جدا)\b/gi, "very");
   }
   if (tone === "bullets") {
     const s = text.split(/(?<=[.!?؟۔])\s+|\n+/).map(x => x.trim()).filter(Boolean);
     if (s.length) text = s.map(x => "• " + x.replace(/^[•\-.\d) ]+/, "")).join("\n");
   }
   if (tone === "email") {
-    const first = text.slice(0, 60).split(/(?<=[.!?؟])\s*/)[0] || "متابعة";
+    const first = text.slice(0, 60).split(/(?<=[.!?؟])\s*/)[0] || "Follow-up";
     text = isAr ? `الموضوع: ${first}\n\nتحية طيبة وبعد،\n\n${text}\n\nمع خالص التقدير` : `Subject: ${first}\n\nHi,\n\n${text}\n\nBest regards`;
   }
   return text;
@@ -97,7 +95,7 @@ function punctuate(text) {
   const isLatin = /[a-zA-Z]/.test(text[0]);
   if (isLatin) text = text[0].toUpperCase() + text.slice(1);
   const q = /^(هل|لماذا|ليه|ازاي|كيف|متى|امتى|ماذا|ايه|why|what|how|when|where|who|which|can you|could you)/i.test(text);
-  if (!/[.!?؟…]$/.test(text)) text += q ? ( /[\u0600-\u06FF]/.test(text) ? "؟" : "?") : ".";
+  if (!/[.!?؟…]$/.test(text)) text += q ? (/[\u0600-\u06FF]/.test(text) ? "؟" : "?") : ".";
   return text;
 }
 function polish(rawText) {
@@ -111,7 +109,6 @@ function polish(rawText) {
   t = formatLists(t);
   if (els.autoPolish?.checked) t = applyTone(t, els.tone.value === "auto" ? "auto" : els.tone.value);
   else t = applyTone(t, els.tone.value === "bullets" || els.tone.value === "email" ? els.tone.value : "auto");
-  // تنقيح الفقرات سطراً بسطر
   t = t.split("\n").map(line => {
     line = line.trim(); if (!line) return "";
     if (/^[•1-9]/.test(line)) { const sym = line.match(/^[•\-]|\d+\./)[0]; return sym + " " + punctuate(line.replace(/^[•\-]|\d+\./, "").trim()); }
@@ -139,18 +136,18 @@ function getRec() {
     else els.clean.innerText = polished;
     tickStats();
   };
-  r.onerror = (e) => { if (e.error === "not-allowed") { setStatus("❌ الميكروفون مرفوض — اسمح من أيقونة القفل في المتصفح"); stopRec(); } };
-  r.onend = () => { if (recognizing) { try { r.start(); } catch {} } }; // إعادة تشغيل تلقائية
+  r.onerror = (e) => { if (e.error === "not-allowed") { setStatus("❌ Microphone blocked — allow it from the lock icon in your browser"); stopRec(); } };
+  r.onend = () => { if (recognizing) { try { r.start(); } catch {} } }; // auto-restart
   return r;
 }
 function startRec() {
-  if (!window.SpeechRecognition && !window.webkitSpeechRecognition) { alert("متصفحك لا يدعم التعرف الصوتي. استخدم Chrome/Edge، أو اكتب يدوياً ثم اضغط إعادة تنقيح."); return; }
+  if (!window.SpeechRecognition && !window.webkitSpeechRecognition) { alert("Your browser has no speech recognition. Use Chrome/Edge, or type manually and press Re-polish."); return; }
   finalText = els.raw.innerText.trim() || finalText;
   rec = getRec(); if (!rec) return;
   recognizing = true; startTime = Date.now();
   try { rec.start(); } catch {}
   els.mic.classList.add("rec"); els.icon.textContent = "⏹️";
-  setStatus("🔴 يسجل الآن... تحدث طبيعياً", true);
+  setStatus("🔴 Recording... speak naturally", true);
   clearInterval(timerInt);
   timerInt = setInterval(() => { els.timer.textContent = fmt(Math.round((Date.now() - startTime) / 1000)); }, 500);
 }
@@ -158,7 +155,7 @@ function stopRec() {
   recognizing = false;
   try { rec && rec.stop(); } catch {}
   els.mic.classList.remove("rec"); els.icon.textContent = "🎙️";
-  setStatus("✅ تم — يمكنك النسخ أو الحفظ أو التحرير");
+  setStatus("✅ Done — copy, save or edit your text");
   tickStats();
   if (finalText.trim()) autoSave();
 }
@@ -170,28 +167,28 @@ $("btn-repolish").addEventListener("click", () => {
   els.clean.innerText = polish(src); tickStats();
 });
 
-// ================= TRANSLATE (MyMemory — مجانية بدون مفتاح) =================
+// ================= TRANSLATE (free MyMemory, no key) =================
 let trT = null;
 function srcCode() { return (els.inLang.value || "en-US").split("-")[0]; }
 function debounceTranslate(text) { clearTimeout(trT); trT = setTimeout(() => doTranslate(text), 800); }
 async function doTranslate(text) {
   if (!text.trim()) return;
   const pair = srcCode() + "|" + els.outLang.value;
-  els.clean.innerText = text + "\n\n⏳ جارٍ الترجمة...";
+  els.clean.innerText = text + "\n\n⏳ Translating...";
   try {
     const r = await fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(text.slice(0, 450)) + "&langpair=" + pair);
     const j = await r.json();
     const out = j?.responseData?.translatedText;
     if (out) { els.clean.innerText = polish(out); tickStats(); }
-    else els.clean.innerText = text + "\n\n⚠️ تعذر الترجمة (حد مجاني). النص الأصلي محفوظ بالأعلى.";
-  } catch { els.clean.innerText = text + "\n\n⚠️ لا يوجد اتصال للترجمة. النص الأصلي محفوظ."; }
+    else els.clean.innerText = text + "\n\n⚠️ Translation unavailable (free limit). Original text kept above.";
+  } catch { els.clean.innerText = text + "\n\n⚠️ No connection for translation. Original text kept."; }
 }
 
-// ================= EDIT COMMANDS (محلية) =================
+// ================= EDIT COMMANDS (local) =================
 function currentSel() { return (els.clean.innerText || "").trim(); }
 function runCmd(cmd, custom = "") {
   let t = currentSel();
-  if (!t) { alert("لا يوجد نص للتحرير — سجّل أولاً أو اكتب في المربع."); return; }
+  if (!t) { alert("Nothing to edit — record first or type in the box."); return; }
   const isAr = /[\u0600-\u06FF]/.test(t);
   if (cmd === "shorter") { const s = t.split(/(?<=[.!?؟])\s+/); t = s.slice(0, Math.max(1, Math.ceil(s.length / 2))).join(" "); }
   if (cmd === "longer") t += isAr ? " وأود أن أضيف أن هذه النقطة مهمة لأنها توضح الفكرة بشكل عملي وتساعد على اتخاذ القرار المناسب." : " To elaborate, this matters because it clarifies the idea in practical terms and helps with next steps.";
@@ -201,15 +198,15 @@ function runCmd(cmd, custom = "") {
   if (cmd === "summary") { const s = t.split(/(?<=[.!?؟])\s+/); t = (isAr ? "الخلاصة: " : "Summary: ") + s.slice(0, 2).join(" "); }
   if (cmd === "translate") { doTranslate(t); return; }
   if (cmd === "custom" && custom) {
-    if (/اقصر|اختصر|short/i.test(custom)) return runCmd("shorter");
-    if (/طول|أطول|long/i.test(custom)) return runCmd("longer");
-    if (/رسمي|formal/i.test(custom)) return runCmd("formal");
-    if (/ودود|friendly/i.test(custom)) return runCmd("friendly");
-    if (/نقاط|bullet/i.test(custom)) return runCmd("bullets");
-    if (/لخص|summar/i.test(custom)) return runCmd("summary");
-    if (/ترجم|translat/i.test(custom)) return runCmd("translate");
-    if (/ايميل|email/i.test(custom)) { els.clean.innerText = applyTone(t, "email"); return; }
-    t = applyTone(t, els.tone.value) + (isAr ? `\n\n(نُفذ الأمر: ${custom})` : `\n\n(Command applied: ${custom})`);
+    if (/short/i.test(custom)) return runCmd("shorter");
+    if (/long/i.test(custom)) return runCmd("longer");
+    if (/formal/i.test(custom)) return runCmd("formal");
+    if (/friendly/i.test(custom)) return runCmd("friendly");
+    if (/bullet/i.test(custom)) return runCmd("bullets");
+    if (/summar/i.test(custom)) return runCmd("summary");
+    if (/translat/i.test(custom)) return runCmd("translate");
+    if (/email/i.test(custom)) { els.clean.innerText = applyTone(t, "email"); return; }
+    t = applyTone(t, els.tone.value) + `\n\n(Command applied: ${custom})`;
   }
   els.clean.innerText = punctuate(t) === t ? t : punctuate(t);
   if (cmd !== "custom") els.clean.innerText = polish(els.clean.innerText);
@@ -220,32 +217,32 @@ $("btn-custom-cmd").addEventListener("click", () => runCmd("custom", $("custom-c
 
 // ================= ACTIONS =================
 $("btn-copy").addEventListener("click", async () => {
-  const t = els.clean.innerText.trim(); if (!t) return alert("لا يوجد نص للنسخ");
-  try { await navigator.clipboard.writeText(t); setStatus("📋 تم النسخ!"); } catch { const r = document.createRange(); r.selectNodeContents(els.clean); const s = getSelection(); s.removeAllRanges(); s.addRange(r); document.execCommand("copy"); }
+  const t = els.clean.innerText.trim(); if (!t) return alert("Nothing to copy");
+  try { await navigator.clipboard.writeText(t); setStatus("📋 Copied!"); } catch { const r = document.createRange(); r.selectNodeContents(els.clean); const s = getSelection(); s.removeAllRanges(); s.addRange(r); document.execCommand("copy"); }
 });
 $("btn-txt").addEventListener("click", () => {
-  const t = els.clean.innerText.trim(); if (!t) return alert("لا يوجد نص للتحميل");
+  const t = els.clean.innerText.trim(); if (!t) return alert("Nothing to download");
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([t], { type: "text/plain;charset=utf-8" })); a.download = "speechin-" + Date.now() + ".txt"; a.click();
 });
 $("btn-clear").addEventListener("click", () => { els.raw.innerText = ""; els.clean.innerText = ""; finalText = ""; els.timer.textContent = "00:00"; tickStats(); });
 $("btn-save").addEventListener("click", () => autoSave(true));
 function autoSave(manual = false) {
-  const clean = els.clean.innerText.trim(); if (!clean) { if (manual) alert("لا يوجد نص للحفظ"); return; }
+  const clean = els.clean.innerText.trim(); if (!clean) { if (manual) alert("Nothing to save"); return; }
   const h = loadHist(); h.unshift({ t: Date.now(), raw: els.raw.innerText.slice(0, 300), clean: clean.slice(0, 2000), mode, tone: els.tone.value });
   localStorage.setItem("speechin_history", JSON.stringify(h.slice(0, 50)));
-  renderHist(); if (manual) setStatus("💾 تم الحفظ في السجل");
+  renderHist(); if (manual) setStatus("💾 Saved to history");
 }
 
 // ================= DICTIONARY =================
 function loadDict() { try { return JSON.parse(localStorage.getItem("speechin_dict") || "[]"); } catch { return []; } }
 function renderDict() {
   const d = loadDict(); const ul = $("dict-list"); ul.innerHTML = "";
-  if (!d.length) ul.innerHTML = "<li>لا توجد كلمات بعد — مثال: سبيتش ان ← speechin</li>";
-  d.forEach((e, i) => { const li = document.createElement("li"); li.innerHTML = `<span><b></b> ← <span></span></span>`; li.querySelector("b").textContent = e.to; li.querySelector("span span").textContent = e.from; const del = document.createElement("button"); del.textContent = "✕"; del.title = "حذف"; del.onclick = () => { const a = loadDict(); a.splice(i, 1); localStorage.setItem("speechin_dict", JSON.stringify(a)); renderDict(); }; li.appendChild(del); ul.appendChild(li); });
+  if (!d.length) ul.innerHTML = "<li>No words yet — e.g. spee chin → speechin</li>";
+  d.forEach((e, i) => { const li = document.createElement("li"); li.innerHTML = `<span><b></b> ← <span></span></span>`; li.querySelector("b").textContent = e.to; li.querySelector("span span").textContent = e.from; const del = document.createElement("button"); del.textContent = "✕"; del.title = "Delete"; del.onclick = () => { const a = loadDict(); a.splice(i, 1); localStorage.setItem("speechin_dict", JSON.stringify(a)); renderDict(); }; li.appendChild(del); ul.appendChild(li); });
 }
 $("dict-add-btn").addEventListener("click", () => {
   const f = $("dict-from").value.trim(), t = $("dict-to").value.trim();
-  if (!f || !t) return alert("اكتب الكلمتين");
+  if (!f || !t) return alert("Enter both fields");
   const d = loadDict(); d.push({ from: f, to: t }); localStorage.setItem("speechin_dict", JSON.stringify(d));
   $("dict-from").value = ""; $("dict-to").value = ""; renderDict();
 });
@@ -254,20 +251,20 @@ $("dict-add-btn").addEventListener("click", () => {
 function loadHist() { try { return JSON.parse(localStorage.getItem("speechin_history") || "[]"); } catch { return []; } }
 function renderHist() {
   const h = loadHist(); const ul = $("hist-list"); ul.innerHTML = "";
-  if (!h.length) { ul.innerHTML = "<li>لا يوجد سجل بعد — ابدأ التحدث وسيُحفظ تلقائياً</li>"; return; }
+  if (!h.length) { ul.innerHTML = "<li>No history yet — start speaking and it will auto-save</li>"; return; }
   h.forEach((e, i) => {
     const li = document.createElement("li");
-    const d = new Date(e.t).toLocaleString("ar");
+    const d = new Date(e.t).toLocaleString("en");
     li.innerHTML = `<div><div></div><small></small></div>`;
     li.querySelector("div div").textContent = e.clean.slice(0, 90) + (e.clean.length > 90 ? "..." : "");
     li.querySelector("small").textContent = d + " • " + e.mode + " • " + e.tone;
-    li.title = "اضغط للاسترجاع";
+    li.title = "Click to restore";
     li.onclick = () => { els.clean.innerText = e.clean; els.raw.innerText = e.raw || ""; finalText = e.raw || ""; tickStats(); window.scrollTo({ top: 0, behavior: "smooth" }); };
     const del = document.createElement("button"); del.textContent = "✕"; del.onclick = (ev) => { ev.stopPropagation(); const a = loadHist(); a.splice(i, 1); localStorage.setItem("speechin_history", JSON.stringify(a)); renderHist(); };
     li.appendChild(del); ul.appendChild(li);
   });
 }
-$("hist-clear").addEventListener("click", () => { if (confirm("مسح كل السجل؟")) { localStorage.removeItem("speechin_history"); renderHist(); } });
+$("hist-clear").addEventListener("click", () => { if (confirm("Clear all history?")) { localStorage.removeItem("speechin_history"); renderHist(); } });
 
 // ================= DEMO =================
 $("cta-demo").addEventListener("click", () => {
