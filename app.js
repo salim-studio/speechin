@@ -128,15 +128,17 @@ function spawnRec() {
   r.lang = els.inLang.value; r.interimResults = true; r.continuous = true; r.maxAlternatives = 1;
   r.onresult = (e) => {
     errStreak = 0;
-    let interim = "";
+    let interim = "", hasFinal = false;
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const tr = e.results[i][0].transcript;
-      if (e.results[i].isFinal) finalText += (finalText ? " " : "") + tr.trim();
+      if (e.results[i].isFinal) { finalText += (finalText ? " " : "") + tr.trim(); hasFinal = true; }
       else interim += tr;
     }
     els.raw.innerText = (finalText + " " + interim).trim();
     const polished = polish(finalText + " " + interim);
-    if (mode === "translate") { els.clean.innerText = polished; debounceTranslate(polished); }
+    // Translate ONLY finalized text: interim fragments ("يعني" → "I mean")
+    // used to win the race and clobber the real translation.
+    if (mode === "translate") { els.clean.innerText = polished; if (hasFinal) debounceTranslate(finalText); }
     else els.clean.innerText = polished;
     tickStats();
   };
@@ -196,21 +198,53 @@ $("btn-repolish").addEventListener("click", () => {
   els.clean.innerText = polish(src); tickStats();
 });
 
-// ================= TRANSLATE (free MyMemory, no key) =================
-let trT = null;
+// ================= TRANSLATE (Google primary, MyMemory fallback — no keys) =================
+let trT = null, trSeq = 0;
 function srcCode() { return (els.inLang.value || "en-US").split("-")[0]; }
 function debounceTranslate(text) { clearTimeout(trT); trT = setTimeout(() => doTranslate(text), 800); }
+function splitChunks(text, max) {
+  const out = []; let cur = "";
+  for (const s of text.split(/(?<=[.!?؟۔])\s+|\n+/)) {
+    if ((cur + " " + s).trim().length > max && cur) { out.push(cur.trim()); cur = s; }
+    else cur += " " + s;
+  }
+  if (cur.trim()) out.push(cur.trim());
+  return out.length ? out : [text];
+}
+async function gtx(q, sl, tl) { // free Google endpoint, CORS-enabled
+  const r = await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&sl=" + sl + "&tl=" + tl + "&dt=t&q=" + encodeURIComponent(q));
+  if (!r.ok) throw new Error("gtx " + r.status);
+  const j = await r.json();
+  const t = ((j && j[0]) || []).map(s => s[0]).join("").trim();
+  if (!t) throw new Error("gtx empty");
+  return t;
+}
+async function myMemory(q, sl, tl) {
+  const r = await fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(q) + "&langpair=" + sl + "|" + tl);
+  const j = await r.json();
+  const t = (j && j.responseData && j.responseData.translatedText || "").trim();
+  if (!t || /MYMEMORY WARNING|INVALID/i.test(t)) throw new Error("mymemory bad");
+  return t;
+}
 async function doTranslate(text) {
-  if (!text.trim()) return;
-  const pair = srcCode() + "|" + els.outLang.value;
-  els.clean.innerText = text + "\n\n⏳ Translating...";
+  text = (text || "").trim(); if (!text) return;
+  const mySeq = ++trSeq; // stale responses from older requests are discarded
+  const stale = () => mySeq !== trSeq;
+  const src = srcCode(), tgt = els.outLang.value;
+  const chunks = splitChunks(text, 900);
+  els.clean.innerText = polish(text) + "\n\n⏳ Translating" + (chunks.length > 1 ? " (" + chunks.length + " parts)" : "") + "…";
   try {
-    const r = await fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(text.slice(0, 450)) + "&langpair=" + pair);
-    const j = await r.json();
-    const out = j?.responseData?.translatedText;
-    if (out) { els.clean.innerText = polish(out); tickStats(); }
-    else els.clean.innerText = text + "\n\n⚠️ Translation unavailable (free limit). Original text kept above.";
-  } catch { els.clean.innerText = text + "\n\n⚠️ No connection for translation. Original text kept."; }
+    const parts = [];
+    for (const c of chunks) {
+      if (stale()) return;
+      try { parts.push(await gtx(c, src, tgt)); }
+      catch { parts.push(await myMemory(c, src, tgt)); }
+    }
+    if (stale()) return;
+    els.clean.innerText = polish(parts.join(" ")); tickStats();
+  } catch {
+    if (!stale()) els.clean.innerText = polish(text) + "\n\n⚠️ Translation failed — check your connection. Original kept above.";
+  }
 }
 
 // ================= EDIT COMMANDS (local) =================
