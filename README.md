@@ -18,7 +18,7 @@ python3 -m http.server 8000
 - 📝 Smart dictation: filler removal (um, uh, you know), repeat merging, final-intent detection ("actually I mean...")
 - 📋 Auto formatting: bullets, numbered steps, email layout
 - 🎭 Tones: formal / friendly / concise / detailed / email / bullets
-- 🌍 Instant translation (free MyMemory, no key — needs internet)
+- 🌍 Instant translation (Google primary + fallback, no key — needs internet)
 - ✨ Command edit: shorter / longer / formal / friendly / bullets / summarize + custom commands
 - 📖 Personal dictionary + 🕘 history — stored in localStorage (100% private)
 - 📊 Stats: words / wpm / time saved + copy / save / .txt download
