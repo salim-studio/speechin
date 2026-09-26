@@ -117,13 +117,17 @@ function polish(rawText) {
   return t;
 }
 
-// ================= SPEECH RECOGNITION =================
-function getRec() {
+// ================= SPEECH RECOGNITION (auto-resume engine) =================
+// Browsers kill recognition on silence or after ~60s. This engine restarts it
+// automatically, so dictation continues until YOU press stop.
+let restartTimer = null, keepAliveInt = null, errStreak = 0;
+function spawnRec() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) return null;
   const r = new SR();
   r.lang = els.inLang.value; r.interimResults = true; r.continuous = true; r.maxAlternatives = 1;
   r.onresult = (e) => {
+    errStreak = 0;
     let interim = "";
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const tr = e.results[i][0].transcript;
@@ -136,23 +140,48 @@ function getRec() {
     else els.clean.innerText = polished;
     tickStats();
   };
-  r.onerror = (e) => { if (e.error === "not-allowed") { setStatus("❌ Microphone blocked — allow it from the lock icon in your browser"); stopRec(); } };
-  r.onend = () => { if (recognizing) { try { r.start(); } catch {} } }; // auto-restart
+  r.onerror = (e) => {
+    if (!recognizing) return;
+    const err = e.error || "";
+    if (err === "not-allowed" || err === "service-not-allowed") { setStatus("❌ Microphone blocked — allow it from the lock icon in your browser"); stopRec(); }
+    else if (err === "audio-capture") { setStatus("❌ No microphone found — plug one in and press the mic again"); stopRec(); }
+    else if (err === "network") { errStreak++; setStatus("⟳ Network glitch — reconnecting, keep talking…", true); }
+    // 'no-speech' + 'aborted' are routine: onend below resumes listening.
+  };
+  r.onend = () => {
+    if (!recognizing) return;
+    setStatus("⟳ Listening… keep talking", true);
+    clearTimeout(restartTimer);
+    const wait = Math.min(300 + errStreak * 700, 3000); // backoff, capped
+    restartTimer = setTimeout(() => {
+      if (!recognizing) return;
+      try { rec = spawnRec(); if (rec) rec.start(); }
+      catch { errStreak++; }
+    }, wait);
+  };
   return r;
+}
+function armKeepAlive() {
+  clearInterval(keepAliveInt);
+  // Proactively recycle recognition every 25s — beats Chrome's silence /
+  // time cutoff. onend fires after stop() and resumes; finalText is kept.
+  keepAliveInt = setInterval(() => { if (recognizing && rec) { try { rec.stop(); } catch {} } }, 25000);
 }
 function startRec() {
   if (!window.SpeechRecognition && !window.webkitSpeechRecognition) { alert("Your browser has no speech recognition. Use Chrome/Edge, or type manually and press Re-polish."); return; }
   finalText = els.raw.innerText.trim() || finalText;
-  rec = getRec(); if (!rec) return;
-  recognizing = true; startTime = Date.now();
-  try { rec.start(); } catch {}
+  recognizing = true; errStreak = 0; startTime = Date.now();
+  rec = spawnRec(); if (!rec) { recognizing = false; return; }
+  try { rec.start(); } catch { recognizing = false; return; }
   els.mic.classList.add("rec"); els.icon.textContent = "⏹️";
-  setStatus("🔴 Recording... speak naturally", true);
+  setStatus("🔴 Recording… speak naturally — it keeps going until you press stop", true);
+  armKeepAlive();
   clearInterval(timerInt);
   timerInt = setInterval(() => { els.timer.textContent = fmt(Math.round((Date.now() - startTime) / 1000)); }, 500);
 }
 function stopRec() {
   recognizing = false;
+  clearTimeout(restartTimer); clearInterval(keepAliveInt);
   try { rec && rec.stop(); } catch {}
   els.mic.classList.remove("rec"); els.icon.textContent = "🎙️";
   setStatus("✅ Done — copy, save or edit your text");
